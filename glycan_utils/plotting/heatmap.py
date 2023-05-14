@@ -1,9 +1,11 @@
+from typing import Optional
+
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from utils.logger import get_logger
+from glycan_utils.utils.logger import get_logger
 
 from glycowork.glycan_data.loader import lib
 from glycowork.motif.annotate import annotate_dataset
@@ -20,7 +22,7 @@ def make_heatmap(
         wildcard_list=[],
         datatype="response",
         rarity_filter=0.05,
-        filepath="",
+        filepath: Optional[str] = None,
         index_col="target",
         estimate_speedup=False,
         motifs: pd.DataFrame = None,
@@ -33,7 +35,8 @@ def make_heatmap(
     | df (dataframe): dataframe with glycan data, rows are samples and columns are glycans
     | mode (string): whether glycan 'sequence' or 'motif' should be used for clustering; default:sequence
     | libr (list): sorted list of unique glycoletters observed in the glycans of our dataset
-    | feature_set (list): which feature set to use for annotations, add more to list to expand; default is 'exhaustive'; options are: 'known' (hand-crafted glycan features), 'graph' (structural graph features of glycans), 'exhaustive' (all mono- and disaccharide features), and 'chemical' (molecular properties of glycan)
+    | feature_set (list): which feature set to use for annotations, add more to list to expand; default is 'exhaustive';
+    | options are: 'known' (hand-crafted glycan features), 'exhaustive' (all mono- and disaccharide features)
     | extra (string): 'ignore' skips this, 'wildcards' allows for wildcard matching', and 'termini' allows for positional matching; default:'termini'
     | wildcard_list (list): list of wildcard names (such as 'bond', 'Hex', 'HexNAc', 'Sia')
     | datatype (string): whether df comes from a dataset with quantitative variable ('response') or from presence_to_matrix ('presence')
@@ -41,7 +44,7 @@ def make_heatmap(
     | filepath (string): absolute path including full filename allows for saving the plot
     | index_col (string): default column to convert to dataframe index; default:'target'
     | estimate_speedup (bool): if True, pre-selects motifs for those which are present in glycans, not 100% exact; default:False
-    | motifs: dataframe of motifs to use in the heatmap. Must contain the following columns: motif_name (should be
+    | motifs: dataframe of motifs to use in the plotting. Must contain the following columns: motif_name (should be
     | unique), motif (as a string), and optionally, termini_spec - a list detailing the positions of each node,
     | including bonds, in the glycan graph. See glycowork.glycan_data.loader.motif_list for an example of the dataframe
     | format
@@ -97,7 +100,7 @@ def make_heatmap(
     cluster_map_df = df.T
     if csv_filepath is not None:
         cluster_map_df.to_csv(csv_filepath, index=False)
-        LOGGER.info(f"Saved heatmap dataset to: {csv_filepath}")
+        LOGGER.info(f"Saved plotting dataset to: {csv_filepath}")
     sns.clustermap(cluster_map_df, **kwargs)
     plt.xlabel("Samples")
     if mode == "sequence":
@@ -105,7 +108,7 @@ def make_heatmap(
     else:
         plt.ylabel("Motifs")
     plt.tight_layout()
-    if len(filepath) > 1:
+    if filepath is not None:
         plt.savefig(filepath, format=filepath.split(".")[-1], dpi=300, bbox_inches="tight")
-        LOGGER.info(f"Saved heatmap to: {filepath}")
+        LOGGER.info(f"Saved plotting to: {filepath}")
     plt.show()
