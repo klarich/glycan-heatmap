@@ -1,12 +1,11 @@
 import random
-from pathlib import Path
 from typing import Optional, List
 
 import fire
 import pandas as pd
 from glycowork.glycan_data.loader import glycan_binding as gb_df
 
-from glycan_utils.plotting.heatmap import make_heatmap
+from glycan_utils.heatmap import make_heatmap
 from glycan_utils.transformations import run_power_transformation
 from glycan_utils.utils.annotate import get_terminal_motifs_dataframe
 from glycan_utils.utils.logger import get_logger
@@ -68,7 +67,6 @@ def generate_heatmap(
         motifs=motifs_df,
         csv_filepath=output_csv_filepath,
     )
-    LOGGER.info("Done generating plotting!")
     return
 
 

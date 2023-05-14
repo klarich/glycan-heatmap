@@ -100,7 +100,7 @@ def make_heatmap(
     cluster_map_df = df.T
     if csv_filepath is not None:
         cluster_map_df.to_csv(csv_filepath, index=False)
-        LOGGER.info(f"Saved plotting dataset to: {csv_filepath}")
+        LOGGER.info(f"Saved dataset to: {csv_filepath}")
     sns.clustermap(cluster_map_df, **kwargs)
     plt.xlabel("Samples")
     if mode == "sequence":
@@ -110,5 +110,5 @@ def make_heatmap(
     plt.tight_layout()
     if filepath is not None:
         plt.savefig(filepath, format=filepath.split(".")[-1], dpi=300, bbox_inches="tight")
-        LOGGER.info(f"Saved plotting to: {filepath}")
+        LOGGER.info(f"Saved clustermap to: {filepath}")
     plt.show()
