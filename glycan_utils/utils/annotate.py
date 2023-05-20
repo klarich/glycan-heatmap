@@ -1,13 +1,10 @@
 from collections import defaultdict
-from typing import Union, List, Iterable, Tuple
+from typing import List, Iterable, Tuple
 import networkx as nx
 import pandas as pd
-from glycowork.glycan_data.loader import lib, motif_list
-from glycowork.motif.annotate import estimate_lower_bound, motif_matrix, get_molecular_properties
+from glycowork.glycan_data.loader import lib
 from glycowork.motif.graph import (
     glycan_to_nxGraph,
-    subgraph_isomorphism,
-    generate_graph_features,
     compare_glycans,
     graph_to_string,
 )
@@ -21,6 +18,7 @@ LOGGER = get_logger(__name__)
 
 def ensure_graph(glycan: Glycan, libr: List[str] = lib, **kwargs) -> nx.Graph:
     """
+    *** adapted from glycaowork function ensure_graph ***
     Ensures that the glycan being used is a networkx Graph object
     :param glycan: Glycan as either a string or nx.Graph
     :param kwargs: additional keyword arguments to pass to glycan_to_nxGraph
@@ -43,12 +41,12 @@ def list_contains_glycan(glycan: Glycan, glycan_list: List[Glycan]) -> bool:
     return any([compare_glycans(glycan, glycan_b) for glycan_b in glycan_list])
 
 
-def _glycan_from_subgraph(subgraph: nx.Graph) -> nx.Graph:
+def glycan_from_subgraph(subgraph: nx.Graph) -> nx.Graph:
     """
-    Helper function for _get_terminal_motifs - updates the subgraph containing the terminal motifs so that it can be a
-    standalone glycan and works with graph_to_string
+    Helper function for _get_terminal_motifs - converts a subgraph to a standalone graph so that it can be
+    used with other glycan graph functions such as graph_to_string.
     :param subgraph: glycan subgraph (network networkx.Graph object)
-    :return: glycan subgraph
+    :return: glycan graph
     """
     # Make a copy of the subgraph and sort the nodes so that they are in order (which is neceesary to work with string
     # to graph
@@ -61,12 +59,14 @@ def _glycan_from_subgraph(subgraph: nx.Graph) -> nx.Graph:
 
 def get_terminal_motifs(glycan: Glycan, size: int, libr: List[str] = lib) -> Tuple[List[str], List[List[str]]]:
     """
+    *** Adapted from glycowork function get_k_saccharides ***
     Gets the terminal motifs containing the number of monosaccharides, specified by the size, from the non-reducing ends
-    :param glycan: input glycan
-    :param size: Size (i.e. number of monosaccharides) of motif to get
-    :param libr: library of monosaccharides to use
-    :return: a list of terminal structures (in string format) and a list of position labels (terminal / internal) for
-    each node in the motif
+    of the glycan.
+    :param glycan: Instance of Glycan
+    :param size: size of motif to find (number of monosaccarides
+    :param libr: Library of monosaccharides to use. If not specified, will use the default glycowork library
+    :return: List of terminal motifs in string format, list of position labels (internal or terminal) for each
+    monosaccharide and bond in the motif.
     """
     # The size has to account for both saccharides and bonds since each bond is also a node in the graph
     size = size * 2 - 1
@@ -97,15 +97,15 @@ def get_terminal_motifs(glycan: Glycan, size: int, libr: List[str] = lib) -> Tup
             subgraph = ggraph.subgraph(path).copy()
             # check to make sure the subgraph is not already in the list
             if not list_contains_glycan(subgraph, subgraphs):
-                subgraph = _glycan_from_subgraph(subgraph)
+                subgraph = glycan_from_subgraph(subgraph)
                 subgraphs.append(subgraph)
         # First, make sure the node is not the reducing end because we don't want to get neighbors of the reducing end
         if node == reducing_end_node:
             LOGGER.debug(f"Found reducing end node: {node}, not traversing neighbors")
-        elif ggraph.degree[node] > 2:
+        elif ggraph.degree[node] > 2:  # noqa
             LOGGER.debug(
                 f"Not traversing neighbors because node {node} {ggraph.nodes[node]['string_labels']} degree > "
-                f"2: {ggraph.degree[node]}"
+                f"2: {ggraph.degree[node]}"  # noqa
             )
         else:
             # iterate over the neighbors of the current node
@@ -134,76 +134,6 @@ def get_terminal_motifs(glycan: Glycan, size: int, libr: List[str] = lib) -> Tup
     return subgraphs, position_labels
 
 
-def annotate_glycan(
-    glycan: Union[str, Graph],
-    motifs: pd.DataFrame = motif_list,
-    libr: List[str] = lib,
-    extra="termini",
-    wildcard_list=None,
-    termini_list=None,
-    set_reducing_end_termini_to_internal: bool = True,
-) -> pd.DataFrame:
-    """
-    Searches for known motifs in glycan sequence. If a motifs dataframe is supplied, those motifs will be used.
-    Otherwise the default motif_list dataframe containing a comprehensive set of known motifs will be used.
-    :param glycan: Input glycan to find motifs in
-    :param motifs: Dataframe of motifs. The columns should contain motif_name and motif and,optionally, termini_spec (to
-    specify whether each monosaccharide is internal, terminal or flexible
-    :param libr: library of monosaccharides to use
-    :param extra: 'ignore' skips this, 'wildcards' allows for wildcard matching', and 'termini' allows for positional
-    matching; default:'termini'
-    :param wildcard_list: list of wildcard names (such as 'z1-z', 'Hex', 'HexNAc', 'Sia')
-    :param termini_list: list of monosaccharide/linkage positions for the glycan (from 'terminal','internal', and
-    'flexible')
-    :param set_reducing_end_termini_to_internal: Sets the termini of the reducing end to "internal"
-    :return: A dataframe with the count of each motif in the glycan
-    """
-    wildcard_list = [] if wildcard_list is None else wildcard_list
-    termini_list = [] if termini_list is None else termini_list
-    # check whether termini are specified
-    if extra == "termini":
-        if len(termini_list) < 1:
-            termini_list = motifs.termini_spec.values.tolist()
-            termini_list = [eval(k) for k in termini_list]
-    # count the number of times each motif occurs in a glycan
-    if extra == "termini":
-        ggraph = ensure_graph(glycan=glycan, libr=libr, termini="calc")
-        if set_reducing_end_termini_to_internal:
-            ggraph = fix_reducing_end_termini(glycan_graph=ggraph)
-        res = [
-            subgraph_isomorphism(
-                ggraph,
-                motifs.motif.values.tolist()[k],
-                libr=libr,
-                extra=extra,
-                wildcard_list=wildcard_list,
-                termini_list=termini_list[k],
-                count=True,
-            )
-            for k in range(len(motifs))
-        ] * 1
-    else:
-        ggraph = ensure_graph(glycan=glycan, libr=libr, termini="ignore")
-        res = [
-            subgraph_isomorphism(
-                ggraph,
-                motifs.motif.values.tolist()[k],
-                libr=libr,
-                extra=extra,
-                wildcard_list=wildcard_list,
-                termini_list=termini_list,
-                count=True,
-            )
-            for k in range(len(motifs))
-        ] * 1
-
-    out = pd.DataFrame(columns=motifs.motif_name.values.tolist())
-    out.loc[0] = res
-    out.loc[0] = out.loc[0].astype("int")
-    out.index = [glycan]
-    return out
-
-
 def fix_reducing_end_termini(glycan_graph: Graph) -> Graph:
     """
     Changes the "termini" of the monosaccharide of the reducing end of the glycan to be "internal"
@@ -225,8 +155,8 @@ def fix_reducing_end_termini(glycan_graph: Graph) -> Graph:
 def get_terminal_motifs_dataframe(glycans: Iterable[str], max_size: int = 3) -> pd.DataFrame:
     """
     Generates a dataframe containing terminal motifs of the glycans supplied. The dataframe will contain three columns:
-    motif, termini_spec and motif_name (identical to motif). The dataframe is formatted so that it can easily be passed
-    to make_heatmap function.
+    motif, termini_spec and motif_name, the contents of which are identical to motif. The dataframe is formatted so that
+    it can easily be passed to make_heatmap function.
     :param glycans: List of glycans to generate terminal motifs for
     :param max_size: The maximum size of motifs to generate. For example, if max_size = 2, will generate motifs
     containing 1 and two monosaccharides
