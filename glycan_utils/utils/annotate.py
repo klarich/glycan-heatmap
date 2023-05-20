@@ -86,7 +86,6 @@ def get_terminal_motifs(glycan: Glycan, size: int, libr: List[str] = lib) -> Tup
         :param path: path that has been traversed so far
         :return: None
         """
-        # TODO: refactor this function
         # add the current node to the path
         path.append(node)
 
