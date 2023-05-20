@@ -1,11 +1,11 @@
 import random
-from typing import Optional, List
+from typing import Optional
 
 import fire
 import pandas as pd
 from glycowork.glycan_data.loader import glycan_binding as gb_df
 
-from glycan_utils.heatmap import make_heatmap
+from glycan_utils.heatmap import make_clustermap
 from glycan_utils.transformations import run_power_transformation
 from glycan_utils.utils.annotate import get_terminal_motifs_dataframe
 from glycan_utils.utils.logger import get_logger
@@ -18,7 +18,7 @@ def generate_heatmap(
     df: pd.DataFrame,
     output_png_filepath: str,
     output_csv_filepath: Optional[str] = None,
-    feature_set: str | List[str] = "known",
+    feature_set: str = "known",
     max_size: int = 2,
     terminal_motifs_only: bool = True,
 ):
@@ -35,8 +35,6 @@ def generate_heatmap(
     motif_list dataframe from glycowork will be used, if the feature set is "known"
     :return: None
     """
-    if isinstance(feature_set, str):
-        feature_set = [feature_set]
     df['target_id'] = [f"seq_{idx}" for idx, _ in df.iterrows()]
     # Drops the protein and target columns if they exist
     target_df = df[['target_id', 'protein']]
@@ -53,12 +51,10 @@ def generate_heatmap(
     LOGGER.info(f"Making clustermap")
     df = df.merge(target_df, how='left', on='target_id')
     df = df.drop(columns='target_id')
-    make_heatmap(
+    make_clustermap(
         df=df,
-        mode="motif",
         index_col="protein",
         feature_set=feature_set,
-        datatype="response",
         yticklabels=True,
         xticklabels=True,
         rarity_filter=0.02,
