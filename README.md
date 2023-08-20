@@ -6,6 +6,8 @@ glycowork, enabling users to create heatmaps based on terminal motifs, know moti
 the dataset. The cluster map clusters lectins based on their glycan binding profile, enabling users to identify lectins
 which bind similar glycans, and therefore may have similar functionality.
 
+![heatmap.png](heatmap.png)
+
 ### Motivations for creating this repository
 
 The glycowork python package enables user to make heatmaps using raw glycan array data with all mono- and
