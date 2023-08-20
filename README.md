@@ -3,8 +3,9 @@
 This repository contains code for making a glycan clustermap using publicly available glycan array data, compiled by
 [glycowork](https://bojarlab.github.io/glycowork/glycan_data.html). This builds upon the heatmap functionality in
 glycowork, enabling users to create heatmaps based on terminal motifs, know motifs, or all mono- and di-saccharides in
-the dataset. The cluster map clusters lectins based on their glycan binding profile, enabling users to identify lectins
-which bind similar glycans, and therefore may have similar functionality.
+the dataset. This code also applies a power transformation to normalize the data before creating a heatmap. The cluster 
+map clusters lectins based on their glycan binding profile, enabling users to identify lectinsnwhich bind similar glycans, 
+and therefore may have similar functionality.
 
 ![heatmap.png](heatmap.png)
 
