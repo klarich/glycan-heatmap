@@ -5,10 +5,10 @@ import fire
 import pandas as pd
 from glycowork.glycan_data.loader import glycan_binding as gb_df
 
-from glycan_utils.heatmap import make_clustermap
-from glycan_utils.transformations import run_power_transformation
-from glycan_utils.utils.annotate import get_terminal_motifs_dataframe
-from glycan_utils.utils.logger import get_logger
+from heatmap import make_clustermap
+from transformations import run_power_transformation
+from utils.annotate import get_terminal_motifs_dataframe
+from utils.logger import get_logger
 
 
 LOGGER = get_logger(__name__)

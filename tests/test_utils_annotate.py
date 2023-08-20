@@ -2,7 +2,7 @@ import networkx as nx
 import pytest
 from glycowork.motif.graph import glycan_to_nxGraph, ensure_graph
 
-from glycan_utils.utils.annotate import list_contains_glycan
+from utils.annotate import list_contains_glycan
 
 GLYCAN_GRAPH = glycan_to_nxGraph("GlcNGc")
 

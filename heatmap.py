@@ -5,7 +5,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from glycan_utils.utils.logger import get_logger
+from utils.logger import get_logger
 
 from glycowork.glycan_data.loader import lib
 from glycowork.motif.annotate import annotate_dataset
@@ -62,7 +62,8 @@ def make_clustermap(
     if filepath is not None:
         plt.savefig(filepath, format=filepath.split(".")[-1], dpi=300, bbox_inches="tight")
         LOGGER.info(f"Saved clustermap to: {filepath}")
-    plt.show()
+    else:
+        plt.show()
 
 
 def calculate_mean_response(df: pd.DataFrame, df_motif: pd.DataFrame) -> pd.DataFrame:
