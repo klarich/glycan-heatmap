@@ -10,8 +10,8 @@ from glycowork.motif.graph import (
 )
 from networkx import Graph
 
-from glycan_utils.utils.logger import get_logger
-from glycan_utils.utils.types import Glycan
+from utils.logger import get_logger
+from utils.types import Glycan
 
 LOGGER = get_logger(__name__)
 
