@@ -1,0 +1,4 @@
+networkx~=2.8  # Glycowork is currently incompatible with networkx >=3.0
+glycowork~=0.6
+fire~=0.5
+pytest~=7.1
