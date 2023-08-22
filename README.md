@@ -18,9 +18,9 @@ di-saccharides, or a set of known motifs (created by glycowork). The motifvation
    terminal motifs of _n_ monosaccharides is important since lectins often recognize terminal (rather than internal)
    motifs.
 2. To enable the application of a power transformation to normalize the data before creating the heatmaps. The values of
-   the heatmap are created by taking the mean of all glycans containing a given motif on the array. However, glycan
-   array data is lognormally distruted, so taking the mean of the raw data means that the values are likely to be skewed
-   by outliers. Therefore, this code applies a
+   the heatmap are created by taking the mean of all glycans containing a given motif on the array. However, the data in
+   the glycowork dataset are not normally distributed (there are many extreme outliers), so taking the mean of the raw
+   data means that the means are likely to be skewed by outliers. Therefore, this code applies a
    yeo-johnson [power transformation](https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.PowerTransformer.html)
    to each array before the heatmap is created to normalize the data.
 
